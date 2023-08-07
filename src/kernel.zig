@@ -26,6 +26,14 @@ export fn kstart() noreturn {
 
 pub fn kmain() !void {
     const out = SerialPort.com1.writer();
-    try out.print("Multiboot info: {?}\n", .{multiboot.MultibootInfo.get()});
+    if (multiboot.MultibootInfo.get()) |mbi| {
+        try out.print("Multiboot info: {}\n", .{mbi});
+        if (mbi.flags.mmap_info_available) {
+            var iter = mbi.mmapIterator();
+            while (iter.next()) |entry| {
+                try out.print("Memory map entry: addr={X} len={} type={}\n", .{ entry.base_addr, entry.length, entry.type });
+            }
+        }
+    }
     return error.SkillIssue;
 }

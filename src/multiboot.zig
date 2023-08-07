@@ -39,7 +39,7 @@ pub const MultibootInfo = extern struct {
     cmdline: u32 align(1),
     mods_count: u32 align(1),
     mods_addr: u32 align(1),
-    syms: u32 align(1),
+    syms: u128 align(1),
     mmap_length: u32 align(1),
     mmap_addr: u32 align(1),
     drives_length: u32 align(1),
@@ -78,9 +78,40 @@ pub const MultibootInfo = extern struct {
         _: u19,
     };
 
+    pub const MmapEntry = extern struct {
+        size: u32 align(1),
+        base_addr: u64 align(1),
+        length: u64 align(1),
+        type: Type align(1),
+
+        pub const Type = enum(u32) {
+            available = 1,
+            acpi = 3,
+            preserve_on_hibernation = 4,
+            defective = 5,
+            _,
+        };
+    };
+
     const expected_magic: u32 = 0x2BADB002;
 
     pub fn get() ?*const MultibootInfo {
         return if (multiboot_magic == expected_magic) multiboot_info else null;
     }
+
+    pub fn mmapIterator(info: *const MultibootInfo) MmapIterator {
+        return .{ .info = info, .pos = 0 };
+    }
+
+    pub const MmapIterator = struct {
+        info: *const MultibootInfo,
+        pos: u32,
+
+        pub fn next(iter: *MmapIterator) ?*const MmapEntry {
+            if (iter.pos == iter.info.mmap_length) return null;
+            const entry: *MmapEntry = @ptrFromInt(iter.info.mmap_addr + iter.pos);
+            iter.pos += entry.size + 4;
+            return entry;
+        }
+    };
 };
