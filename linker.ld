@@ -24,4 +24,6 @@ SECTIONS {
         *(.bss)
         *(.bss.*)
     }
+
+    kernel_end_sym = .;
 }
