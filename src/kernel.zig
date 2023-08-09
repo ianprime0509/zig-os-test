@@ -42,17 +42,14 @@ export fn kstart() noreturn {
 pub fn kmain() !void {
     const out = SerialPort.com1.writer();
     try out.print("{} pages of memory available\n", .{heap.page_allocator_state.last_page - heap.page_allocator_state.first_page + 1});
-    {
-        const page = try heap.page_allocator.alloc(u8, 4096);
-        try out.print("Wow it's a page: {X}\n", .{@intFromPtr(page.ptr)});
-    }
-    {
-        const page = try heap.page_allocator.alloc(u8, 4096 * 10);
-        try out.print("Another one: {X}\n", .{@intFromPtr(page.ptr)});
-    }
-    {
-        const page = try heap.page_allocator.alloc(u8, 4096 * 100);
-        try out.print("ANOTHER ONE: {X}\n", .{@intFromPtr(page.ptr)});
-    }
+    const page1 = try heap.page_allocator.alloc(u8, 4096);
+    try out.print("Wow it's a page: {X}\n", .{@intFromPtr(page1.ptr)});
+    const page2 = try heap.page_allocator.alloc(u8, 4096 * 10);
+    try out.print("Another one: {X}\n", .{@intFromPtr(page2.ptr)});
+    const page3 = try heap.page_allocator.alloc(u8, 4096 * 100);
+    try out.print("ANOTHER ONE: {X}\n", .{@intFromPtr(page3.ptr)});
+    heap.page_allocator.free(page1);
+    const page4 = try heap.page_allocator.alloc(u8, 1024);
+    try out.print("New page: {X}\n", .{@intFromPtr(page4.ptr)});
     return error.SkillIssue;
 }
